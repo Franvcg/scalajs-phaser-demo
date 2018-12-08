@@ -9,7 +9,7 @@ import pairs.client.phaser._
 
 class Square(val row: Int, val col: Int, val card: Int,
     val front: Sprite, val back: Sprite)
-
+// Essa classe é responsável por controlar o fluxo do jogo, com métodos capazes de gerenciar o funcionamento do mesmo e da sua renderização.
 class GameState extends State {
   private var firstClick: Option[Square] = None
   private var secondClick: Option[Square] = None
@@ -17,13 +17,15 @@ class GameState extends State {
   private var score: Int = 0
   private var scoreText: js.Dynamic = null
   private var scoreGraphics: Graphics = null
-
+    
+//Pré-carrega os recursos essenciais antes do início do jogo, os assets(sons,imagens,sprites*...)
+//*Sprites são objetos gráficos em 2D
   override def preload(): Unit = {
     load.image("back", "assets/back.png")
     for (i <- 0 to 9)
       load.image(i.toString(), s"assets/$i.png")
   }
-
+ //Utilizado para criar o jogo propriamente dito, esse método é chamado quando o jogo é carregado, após o preload
   override def create(): Unit = {
     val allCards =
       for (i <- 0 to 9; _ <- 1 to 2) yield i // two copies of each card
@@ -38,10 +40,10 @@ class GameState extends State {
       val front = game.add.sprite(x, y, key = card.toString())
       val back = game.add.sprite(x, y, key = "back")
 
-      // Initially, the back is visible
+      // Ao iniciar o jogo, as costas da carta são mostradas, desse modo, a frente não é visível
       front.visible = false
 
-      // Setup click event
+      // Configura o evento do clique do mouse
       val square = new Square(row, col, card, front, back)
       back.inputEnabled = true
       back.events.onInputDown.add((sprite: Sprite) => doClick(square))
@@ -57,7 +59,7 @@ class GameState extends State {
   private def doClick(square: Square): Unit = {
     (firstClick, secondClick) match {
       case (None, _) =>
-        // First click of a pair
+        // Primeiro clique, após ele, aguardamos até o segundo para verificar se as cartas selecionadas são iguais ou não
         firstClick = Some(square)
 
       case (Some(first), None) if first.card == square.card =>
@@ -112,8 +114,16 @@ class GameState extends State {
 
 object PairsClient {
   def main(args: Array[String]): Unit = {
+    //Aqui criamos um objeto do Jogo, que irá configurar o framework e funcionamento do jogo
+    //Informamos a largura, altura e o id da DIV tag, criado no código HTML.
+    //É possível deixar esse parâmetro vazio, mas especificando a DIV tag, isso nos fornece maior controle sobre o posicionamento do jogo na página HTML. 
     val game = new Game(width = 800, height = 520, parent = "pairs-container")
+    //Adiciona o objeto State criado a lista de estados disponíveis no jogo
+    //Nesse caso, só há um estado disponível, já que não foi criado um estado para o menu, instruções...
     game.state.add("game", new GameState)
+    //Iniciamos o estado do jogo com o objeto add nele acima, sem a necessidade de especificar o estado a ser iniciado, já que só há um
+    //Serão chamadas as funções preload, create nessa sequência
+    //Se não houvesse a lógica do jogo, nesse momento, seria criada uma tela preta com as dimensões informadas acima
     game.state.start("game")
   }
 }
