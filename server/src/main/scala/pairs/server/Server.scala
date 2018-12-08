@@ -10,13 +10,14 @@ import scala.io.StdIn
 import scala.util.Properties
 
 object Server {
+  // Cria-se uma DIV tag, onde a biblioteca Phaser irá configurar e carregar o projeto.
   private val Index = """
     <html>
       <head>
-        <title>Pairs</title>
+        <title>Jogo da Memoria</title>
       </head>
       <body>
-        <h1>Pairs</h1>
+        <h1>Jogo da Memoria</h1>
         <div id="pairs-container"/>
         <script type="application/javascript" src="assets/phaser.min.js"></script>
         <script type="application/javascript" src="/js/pairs-client-fastopt.js"></script>
@@ -46,12 +47,12 @@ object Server {
       }
     }
 
-    val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(route, "localhost", 9000)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
+    println(s"Servidor online, acesse http://localhost:9000/\nPressione ENTER para sair...")
+    StdIn.readLine() // Roda até o usuário digitar ENTER
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
+      .onComplete(_ => system.terminate()) // desliga o servidor ao terminar
   }
 }
