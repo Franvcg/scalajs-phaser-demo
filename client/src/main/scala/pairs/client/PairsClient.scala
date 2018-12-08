@@ -13,27 +13,35 @@ class Square(val row: Int, val col: Int, val card: Int,
 class GameState extends State {
   private var firstClick: Option[Square] = None
   private var secondClick: Option[Square] = None
-
   private var score: Int = 0
   private var scoreText: js.Dynamic = null
   private var scoreGraphics: Graphics = null
     
 //Pré-carrega os recursos essenciais antes do início do jogo, os assets(sons,imagens,sprites*...)
 //*Sprites são objetos gráficos em 2D
+// São carregadas 10 imagens das cartas contendo seu valor e 1 imagem que será as costas da carta
+// Com a criação do objeto, temos acesso as funções e propriedades desse objeto.
   override def preload(): Unit = {
     load.image("back", "assets/back.png")
     for (i <- 0 to 9)
       load.image(i.toString(), s"assets/$i.png")
   }
- //Utilizado para criar o jogo propriamente dito, esse método é chamado quando o jogo é carregado, após o preload
+ //Utilizado para criar o jogo propriamente dito, esse método é chamado quando o jogo é carregado, após o preload.
+ // Serão criados 20 objetos gráficos dos 10 pares e 20 das costas das cartas. Além disso, é necessário tornar o posicionamento das 
+ //cartas aleatório a cada jogo e esconder o conteúdo das cartas/mostrar as suas costas.
   override def create(): Unit = {
     val allCards =
-      for (i <- 0 to 9; _ <- 1 to 2) yield i // two copies of each card
+      for (i <- 0 to 9; _ <- 1 to 2) yield i // cria duas cópias de cada carta de valor
     val shuffledCards = scala.util.Random.shuffle(allCards)
 
+      //Cria as 20 posições das cartas, sendo 4 linhas e 5 colunas
     val allPositions =
       for (row <- 0 until 4; col <- 0 until 5) yield (row, col)
 
+      //Posicionamos as cartas geradas em posições aleatórias a cada novo jogo e em add sprite passamos 3 parâmetros, sendo
+      // uma coordenada em x, em y e o seu valor/costas.
+      // As coordenadas x e y iniciam em (0,0), representando o topo superior esquerdo da tela
+      // Vai até (800,520), que seria o canto inferior direito da tela
     for (((row, col), card) <- allPositions zip shuffledCards) yield {
       val TileSize = 130
       val (x, y) = (col * TileSize, row * TileSize)
@@ -43,12 +51,14 @@ class GameState extends State {
       // Ao iniciar o jogo, as costas da carta são mostradas, desse modo, a frente não é visível
       front.visible = false
 
-      // Configura o evento do clique do mouse
+      // InputEnabled: configura o clique do mouse, informando ao Phaser que devemos rastrear os seus eventos
+      //onInputDown: rastreia os cliques do mouse e chama doClick
       val square = new Square(row, col, card, front, back)
       back.inputEnabled = true
       back.events.onInputDown.add((sprite: Sprite) => doClick(square))
     }
-
+    
+      //Criando e posicionando o Score no canto direito da tela 
     scoreText = game.asInstanceOf[js.Dynamic].add.text(
         660, 20, "Score: 0",
         js.Dynamic.literal(fontSize = "24px", fill = "#fff"))
@@ -56,19 +66,23 @@ class GameState extends State {
     scoreGraphics = game.add.graphics(660, 50)
   }
 
+   // Será chamado quando clicarmos em uma carta ainda não selecionada
   private def doClick(square: Square): Unit = {
     (firstClick, secondClick) match {
       case (None, _) =>
-        // Primeiro clique, após ele, aguardamos até o segundo para verificar se as cartas selecionadas são iguais ou não
+        // Se for o primeiro dos dois cliques, salvamos o índice do bloco na variável abaixo
         firstClick = Some(square)
 
       case (Some(first), None) if first.card == square.card =>
-        // Found a pair
+        // Encontrado um par, dado que o conteúdo dos dois cliques é igual
+        // Incrementamos a pontuação
         firstClick = None
         score += 50
 
       case (Some(_), None) =>
-        // Missing a pair, need to hide it later
+        // Os cliques não resultaram em encontrar um par. A partir dai, aguardamos um pequeno tempo para mostrar as costas das cartas novamente.
+        // E então, passado o tempo, ocultamos o cartão novamente, como dito acima, mostrando as suas costas, através da variável 'visible'
+        // Definimos novamente o primeiro e segundo cliques como 'None'
         secondClick = Some(square)
         score -= 5
         js.timers.setTimeout(1000) {
@@ -82,7 +96,8 @@ class GameState extends State {
         }
 
       case (Some(_), Some(_)) =>
-        // Third click, cancel (have to wait for the deadline to elapse)
+        // Terceiro clique, a partir dele, há duas opções: se tivermos encontrado um par, as cartas ficam reveladas;
+        //caso contrário, as cartas voltam a apresentar as suas costas
         return
     }
 
