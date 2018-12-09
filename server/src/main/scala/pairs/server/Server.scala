@@ -14,10 +14,10 @@ object Server {
   private val Index = """
     <html>
       <head>
-        <title>Jogo da Memoria</title>
+        <title>Jogo da Memória</title>
       </head>
       <body>
-        <h1>Jogo da Memoria</h1>
+        <h1>Jogo da Memória</h1>
         <div id="pairs-container"/>
         <script type="application/javascript" src="assets/phaser.min.js"></script>
         <script type="application/javascript" src="/js/pairs-client-fastopt.js"></script>
