@@ -28,12 +28,11 @@ object Server {
   def main(args: Array[String]): Unit = {
     implicit val system = ActorSystem("my-system")
     implicit val materializer = ActorMaterializer()
-    // needed for the future flatMap/onComplete in the end
+    // Necessário para desconectar a porta e desligar o servidor no final
     implicit val executionContext = system.dispatcher
 
     val route = {
-      pathPrefix("js") { //fileName =>
-        //getFromFile("../client/target/scala-2.11/" + fileName)
+      pathPrefix("js") {
         getFromDirectory("./client/target/scala-2.12")
       } ~
       pathPrefix("assets") {
@@ -52,7 +51,7 @@ object Server {
     println(s"Servidor online, acesse http://localhost:9000/\nPressione ENTER para sair...")
     StdIn.readLine() // Roda até o usuário digitar ENTER
     bindingFuture
-      .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // desliga o servidor ao terminar
+      .flatMap(_.unbind()) // Ativa a desconexão da porta
+      .onComplete(_ => system.terminate()) // Desliga o servidor ao terminar
   }
 }

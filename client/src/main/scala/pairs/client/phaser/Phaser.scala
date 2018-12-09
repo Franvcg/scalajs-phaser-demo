@@ -1,18 +1,23 @@
+//Esse arquivo .scala é necessário para "traduzir" algumas classes nativas da biblioteca Phaser de JavaScript para Scala
+//Phaser possui uma grande quantidade de classes e objetos, logo "traduzimos" apenas as que usamos e são necessárias,
+//Sem isso o compilador não reconhece Phaser e suas subclasses.
 package pairs.client.phaser
 
-import scala.scalajs.js
-import js.annotation._
+import scala.scalajs.js //Importa Scala.js pois Phaser é uma API de JS, não de Scala
+import js.annotation._  //É necessário para realizar as anotações @
 import js.|
 import org.scalajs.dom.html
 
-@js.native
-@JSGlobal
+@js.native //Indica que Phaser é nativo de uma biblioteca JavaScript
+@JSGlobal  //Indica que esse objeto é uma variável global em JavaScript.
 object Phaser extends js.Object {
   val AUTO: Int = js.native
 }
 
 @js.native
-@JSGlobal("Phaser.Game")
+@JSGlobal("Phaser.Game")  
+//Quando criamos uma classe com o nome diferente do que ela possui em JavaScript
+//é passado uma String com argumento da anotação @JSGlobal, indicando qual o nome dessa classe em JS.
 class Game(
     width: Double | String = 800,
     height: Double | String = 600,

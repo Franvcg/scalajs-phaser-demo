@@ -63,12 +63,12 @@ class GameState extends State {
         firstClick = Some(square)
 
       case (Some(first), None) if first.card == square.card =>
-        // Found a pair
+        // Encontrou uma carta igual a anterior
         firstClick = None
         score += 50
 
       case (Some(_), None) =>
-        // Missing a pair, need to hide it later
+        // Encontrou cartas diferentes, logo, é necessário virar as cartas de volta
         secondClick = Some(square)
         score -= 5
         js.timers.setTimeout(1000) {
@@ -82,14 +82,14 @@ class GameState extends State {
         }
 
       case (Some(_), Some(_)) =>
-        // Third click, cancel (have to wait for the deadline to elapse)
+        // Terceiro clique, cancela (precisa esperar um certo tempo passar para permitir clicar novamente)
         return
     }
 
     square.back.visible = false
     square.front.visible = true
 
-    scoreText.text = s"Score: $score"
+    scoreText.text = s"Score: $score"  //Mostra a pontuação
 
     scoreGraphics.clear()
     for (i <- 0 until score / 100) {
