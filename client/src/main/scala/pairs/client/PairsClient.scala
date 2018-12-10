@@ -7,78 +7,78 @@ import org.scalajs.dom
 
 import pairs.client.phaser._
 
-class Square(val row: Int, val col: Int, val card: Int,
-    val front: Sprite, val back: Sprite)
+class Quadro(val linha: Int, val col: Int, val carta: Int,
+    val frente: Sprite, val costas: Sprite)
 // Essa classe é responsável por controlar o fluxo do jogo, com métodos capazes de gerenciar o funcionamento do mesmo e da sua renderização.
-class GameState extends State {
-  private var firstClick: Option[Square] = None
-  private var secondClick: Option[Square] = None
+class EstadoJogo extends State {
+  private var primeiroClique: Option[Quadro] = None
+  private var segundoClique: Option[Quadro] = None
 
-  private var score: Int = 0
-  private var scoreText: js.Dynamic = null
-  private var scoreGraphics: Graphics = null
+  private var pontuacao: Int = 0
+  private var pontuacaoTexto: js.Dynamic = null
+  private var pontuacaoGrafica: Graphics = null
     
 //Pré-carrega os recursos essenciais antes do início do jogo, os assets(sons,imagens,sprites*...)
 //*Sprites são objetos gráficos em 2D
-  override def preload(): Unit = {
+  override def preCarregamento(): Unit = {
     load.image("back", "assets/back.png")
     for (i <- 0 to 9)
       load.image(i.toString(), s"assets/$i.png")
   }
- //Utilizado para criar o jogo propriamente dito, esse método é chamado quando o jogo é carregado, após o preload
-  override def create(): Unit = {
-    val allCards =
-      for (i <- 0 to 9; _ <- 1 to 2) yield i // two copies of each card
-    val shuffledCards = scala.util.Random.shuffle(allCards)
+ //Utilizado para criar o jogo propriamente dito, esse método é chamado quando o jogo é carregado, após o preCarregamento
+  override def criar(): Unit = {
+    val todasCartas =
+      for (i <- 0 to 9; _ <- 1 to 2) yield i // duas copias de cada carta
+    val cartasEmbaralhadas = scala.util.Random.shuffle(todasCartas)
 
-    val allPositions =
-      for (row <- 0 until 4; col <- 0 until 5) yield (row, col)
+    val todosQuadros =
+      for (linha <- 0 until 4; col <- 0 until 5) yield (linha, col)
 
-    for (((row, col), card) <- allPositions zip shuffledCards) yield {
-      val TileSize = 130
-      val (x, y) = (col * TileSize, row * TileSize)
-      val front = game.add.sprite(x, y, key = card.toString())
-      val back = game.add.sprite(x, y, key = "back")
+    for (((linha, col), carta) <- todosQuadros zip cartasEmbaralhadas) yield {
+      val tamQuadro = 130
+      val (x, y) = (col * tamQuadro, linha * tamQuadro)
+      val frente = game.add.sprite(x, y, key = card.toString())
+      val costas = game.add.sprite(x, y, key = "back")
 
       // Ao iniciar o jogo, as costas da carta são mostradas, desse modo, a frente não é visível
-      front.visible = false
+      frente.visible = false
 
       // Configura o evento do clique do mouse
-      val square = new Square(row, col, card, front, back)
-      back.inputEnabled = true
-      back.events.onInputDown.add((sprite: Sprite) => doClick(square))
+      val quadro = new Quadro(linha, col, carta, frente, costas)
+      costas.inputEnabled = true
+      costas.events.onInputDown.add((sprite: Sprite) => clique(quadro))
     }
 
-    scoreText = game.asInstanceOf[js.Dynamic].add.text(
-        660, 20, "Score: 0",
+    pontuacaoTexto = game.asInstanceOf[js.Dynamic].add.text(
+        660, 20, "Pontuacao: 0",
         js.Dynamic.literal(fontSize = "24px", fill = "#fff"))
 
-    scoreGraphics = game.add.graphics(660, 50)
+    pontuacaoGrafica = game.add.graphics(660, 50)
   }
 
-  private def doClick(square: Square): Unit = {
-    (firstClick, secondClick) match {
+  private def clique(quadro: Quadro): Unit = {
+    (primeiroClique, segundoClique) match {
       case (None, _) =>
         // Primeiro clique, após ele, aguardamos até o segundo para verificar se as cartas selecionadas são iguais ou não
-        firstClick = Some(square)
+        primeiroClique = Some(quadro)
 
-      case (Some(first), None) if first.card == square.card =>
+      case (Some(first), None) if first.carta == quadro.carta =>
         // Encontrou uma carta igual a anterior
-        firstClick = None
-        score += 50
+        primeiroClique = None
+        pontuacao += 50
 
       case (Some(_), None) =>
         // Encontrou cartas diferentes, logo, é necessário virar as cartas de volta
-        secondClick = Some(square)
-        score -= 5
+        segundoClique = Some(quadro)
+        pontuacao -= 5
         js.timers.setTimeout(1000) {
-          assert(firstClick.isDefined && secondClick.isDefined)
-          for (square <- Seq(firstClick.get, secondClick.get)) {
-            square.front.visible = false
-            square.back.visible = true
+          assert(primeiroClique.isDefined && segundoClique.isDefined)
+          for (quadro <- Seq(primeiroClique.get, segundoClique.get)) {
+            quadro.frente.visible = false
+            quadro.costas.visible = true
           }
-          firstClick = None
-          secondClick = None
+          primeiroClique = None
+          segundoClique = None
         }
 
       case (Some(_), Some(_)) =>
@@ -86,13 +86,13 @@ class GameState extends State {
         return
     }
 
-    square.back.visible = false
-    square.front.visible = true
+    quadro.costas.visible = false
+    quadro.frente.visible = true
 
-    scoreText.text = s"Score: $score"  //Mostra a pontuação
+    pontuacaoTexto.text = s"Pontuacao: $pontuacao"  // Mostra a pontuação
 
-    scoreGraphics.clear()
-    for (i <- 0 until score / 100) {
+    pontuacaoGrafica.clear()
+    for (i <- 0 until pontuacao / 100) {
       val offset = i * 24
       def pt(x0: Double, y0: Double): PointLike = new PointLike {
         val x = x0
@@ -105,9 +105,9 @@ class GameState extends State {
         pt(offset + 10 + len*Math.cos(angle), 10 - len*Math.sin(angle))
       }
 
-      scoreGraphics.beginFill(0xFFD700)
-      scoreGraphics.drawPolygon(points)
-      scoreGraphics.endFill()
+      pontuacaoGrafica.beginFill(0xFFD700)
+      pontuacaoGrafica.drawPolygon(points)
+      pontuacaoGrafica.endFill()
     }
   }
 }
@@ -120,9 +120,9 @@ object PairsClient {
     val game = new Game(width = 800, height = 520, parent = "pairs-container")
     //Adiciona o objeto State criado a lista de estados disponíveis no jogo
     //Nesse caso, só há um estado disponível, já que não foi criado um estado para o menu, instruções...
-    game.state.add("game", new GameState)
+    game.state.add("game", new EstadoJogo)
     //Iniciamos o estado do jogo com o objeto add nele acima, sem a necessidade de especificar o estado a ser iniciado, já que só há um
-    //Serão chamadas as funções preload, create nessa sequência
+    //Serão chamadas as funções preCarregamento, criar nessa sequência
     //Se não houvesse a lógica do jogo, nesse momento, seria criada uma tela preta com as dimensões informadas acima
     game.state.start("game")
   }
