@@ -37,7 +37,7 @@ class EstadoJogo extends State {
     for (((linha, col), carta) <- todosQuadros zip cartasEmbaralhadas) yield {
       val tamQuadro = 130
       val (x, y) = (col * tamQuadro, linha * tamQuadro)
-      val frente = game.add.sprite(x, y, key = card.toString())
+      val frente = game.add.sprite(x, y, key = carta.toString())
       val costas = game.add.sprite(x, y, key = "back")
 
       // Ao iniciar o jogo, as costas da carta são mostradas, desse modo, a frente não é visível
